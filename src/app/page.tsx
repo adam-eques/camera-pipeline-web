@@ -12,6 +12,7 @@ export default function Home() {
   const remoteVideo = React.useRef<HTMLVideoElement>(null);
   const { socket } = useSocketConnection(true)
   const peer = usePeerConnection(true)
+  const [recvState, setRecvState] = React.useState<'beforeStart'|'loading'|'started'|'stopped'>('beforeStart')
 
   const ontrack = (peer: Peer) => (evt: RTCTrackEvent) => {
     console.info('ontrack triggered')
@@ -20,6 +21,7 @@ export default function Home() {
       console.log(evt.streams[0].getVideoTracks())
       remoteVideo.current.srcObject = evt.streams[0]
       remoteVideo.current.play().then(() => {
+        setRecvState('started')
         console.log("Success to play video")
       }, (reason: any) => {
         console.log("failed to play video")
@@ -31,9 +33,14 @@ export default function Home() {
     }
   };
 
+  const onNotReady = () => {
+    setRecvState('beforeStart')
+    alert('Can not start (another client was already connected)')
+  }
+
   React.useEffect(() => {
     if (socket && peer) {
-      setVSReceiver(new VideoStreamReceiver(socket, peer, ontrack))
+      setVSReceiver(new VideoStreamReceiver(socket, peer, ontrack, onNotReady))
     }
   }, [socket, peer])
 
@@ -47,15 +54,42 @@ export default function Home() {
       <main className="relative justify-center flex items-center w-full h-full">
         <div className='absolute flex top-0 left-0 pr-5 w-full mt-5 mr-5 white z-50 justify-end'>
           <button
-            className='bg-slate-200 px-4 py-2 text-gray-800'
+            className='bg-slate-200 px-4 py-2 text-gray-800 disabled:text-gray-300'
             onClick={() => {
-              vsReceiver?.makeOffer(false, true)
+              setRecvState('loading')
+              vsReceiver?.start()
             }}
+            disabled={(() => {
+              switch (recvState) {
+                case 'beforeStart':
+                case 'stopped':
+                  return false
+                case 'loading':
+                case 'started':
+                  return true
+                default:
+                  return false
+              }
+            })()}
           >
-            start
+            {(() => {
+              switch (recvState) {
+                case 'beforeStart':
+                  return 'Start'
+                case 'loading':
+                  return 'Loading...'
+                case 'started':
+                  return 'Started'
+                case 'stopped':
+                  return 'Restart'
+                default:
+                  return ''
+              }
+            })()}
           </button>
         </div>
         <video
+          ref={remoteVideo}
           className='bg-gray-200 mt-32 w-[960px] h-[540px]'
           autoPlay
           muted

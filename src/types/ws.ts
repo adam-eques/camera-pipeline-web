@@ -1,4 +1,5 @@
 export interface WsMsg {
+  Sender?: boolean,
   WSType: string,
   SDP?: string,
   ICE?: RTCIceCandidateInit,
