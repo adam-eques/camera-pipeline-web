@@ -38,9 +38,13 @@ export default function Home() {
     alert('Can not start (another client was already connected)')
   }
 
+  const onDisconnected = () => {
+    setRecvState('stopped')
+  }
+
   React.useEffect(() => {
     if (socket && peer) {
-      setVSReceiver(new VideoStreamReceiver(socket, peer, ontrack, onNotReady))
+      setVSReceiver(new VideoStreamReceiver(socket, peer, ontrack, onNotReady, onDisconnected))
     }
   }, [socket, peer])
 

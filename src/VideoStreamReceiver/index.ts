@@ -4,7 +4,7 @@ class VideoStreamReceiver {
   socket: WebSocket;
   peer: Peer
 
-  constructor(socket: WebSocket, peer: Peer, onTrack: Function, onNotReady: Function) {
+  constructor(socket: WebSocket, peer: Peer, onTrack: Function, onNotReady: Function, onDisconnected: Function) {
     this.socket = socket
     this.peer = peer
 
@@ -84,9 +84,12 @@ class VideoStreamReceiver {
       console.log("remote description: ", peerConnection.remoteDescription?.type)
       console.log("remote description: ", peerConnection.remoteDescription?.sdp)
       console.log("IceCandidate State changed", peerConnection.iceConnectionState)
-      if (peerConnection.iceConnectionState === 'disconnected' || peerConnection.iceConnectionState === 'failed') {
-        peerConnection.restartIce()
+      if (peerConnection.iceConnectionState === 'disconnected') {
+        onDisconnected()
       }
+      // if (peerConnection.iceConnectionState === 'disconnected' || peerConnection.iceConnectionState === 'failed') {
+      //   peerConnection.restartIce()
+      // }
     }
     
     peerConnection.ontrack = onTrack(this.peer)
