@@ -3,10 +3,12 @@ import { Peer, WsMsg, WSType } from "@/types";
 class VideoStreamReceiver {
   socket: WebSocket;
   peer: Peer
+  onStart: Function
 
-  constructor(socket: WebSocket, peer: Peer, onTrack: Function, onNotReady: Function, onDisconnected: Function) {
+  constructor(socket: WebSocket, peer: Peer, onTrack: Function, onStart: Function, onNotReady: Function, onDisconnected: Function) {
     this.socket = socket
     this.peer = peer
+    this.onStart = onStart
 
     socket.onopen = () => {
       console.log("socket connected")
@@ -119,18 +121,24 @@ class VideoStreamReceiver {
   }
 
   start() {
-    this.sendWSMsg({
+    const ret = this.sendWSMsg({
       WSType: WSType.CONNECTED,
       Sender: false,
     })
+    if (ret) {
+      this.onStart()
+    }
   }
 
-  sendWSMsg(data: WsMsg) {
+  sendWSMsg(data: WsMsg) : boolean {
     if (this.socket.readyState == WebSocket.OPEN) {
       data.Sender = false
       this.socket.send(JSON.stringify(data))
+      return true
     } else {
       console.log("websocket connection is not yet opened")
+      alert("Signaling server is not active")
+      return false
     }
   }
 

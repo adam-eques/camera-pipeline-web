@@ -35,16 +35,20 @@ export default function Home() {
 
   const onNotReady = () => {
     setRecvState('beforeStart')
-    alert('Can not start (another client was already connected)')
+    alert('Can not start (stream sender is not ready)')
   }
 
   const onDisconnected = () => {
     setRecvState('stopped')
   }
 
+  const onStart = () => {
+    setRecvState('loading')
+  }
+
   React.useEffect(() => {
     if (socket && peer) {
-      setVSReceiver(new VideoStreamReceiver(socket, peer, ontrack, onNotReady, onDisconnected))
+      setVSReceiver(new VideoStreamReceiver(socket, peer, ontrack, onStart, onNotReady, onDisconnected))
     }
   }, [socket, peer])
 
@@ -60,7 +64,6 @@ export default function Home() {
           <button
             className='bg-slate-200 px-4 py-2 text-gray-800 disabled:text-gray-300'
             onClick={() => {
-              setRecvState('loading')
               vsReceiver?.start()
             }}
             disabled={(() => {
